@@ -17,6 +17,8 @@ pygame.display.set_caption("John Wick 4")
 score_val = 0
 font = pygame.font.Font('freesansbold.ttf', 32)
 
+game_over_font = pygame.font.Font('freesansbold.ttf', 70)
+
 textX = 10
 textY = 10
 
@@ -25,6 +27,10 @@ def show_score(x, y):
     score = font.render("SCORE : " + str(score_val), True, (210, 100, 10))
     screen.blit(score, (x, y))
 
+#Game Over
+def game_over(x, y):
+    game_over_text = game_over_font.render("GAME OVER", True, (250, 50, 0))
+    screen.blit(game_over_text, (x,y))
 
 # Player
 playerImg = pygame.image.load('player.png')
@@ -120,13 +126,21 @@ while running:
     playerY += playerY_change
 
     for i in range(num_of_enemies):
+
+        #Game Over
+        if gunY[i] > 250:
+            for j in range (num_of_enemies):
+                gunY[j]=1000
+            game_over(100,300)
+            break
+
         gunY_change[i] = 0
         if gunX[i] >= 736:
             gunX_change[i] = -0.4
-            gunY_change[i] = 10
+            gunY_change[i] = 110
         if gunX[i] <= 0:
             gunX_change[i] = 0.4
-            gunY_change[i] = 10
+            gunY_change[i] = 110
         gunX[i] += gunX_change[i]
         gunY[i] += gunY_change[i]
 
