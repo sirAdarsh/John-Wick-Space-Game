@@ -1,5 +1,8 @@
 import pygame
 import random
+import math
+
+from pygame import mixer
 
 # Initialize the pygame
 pygame.init()
@@ -10,6 +13,19 @@ screen = pygame.display.set_mode((800, 600))
 # Title and Icon
 pygame.display.set_caption("John Wick 4")
 
+# Score
+score_val = 0
+font = pygame.font.Font('freesansbold.ttf', 32)
+
+textX = 10
+textY = 10
+
+
+def show_score(x, y):
+    score = font.render("SCORE : " + str(score_val), True, (210, 100, 10))
+    screen.blit(score, (x, y))
+
+
 # Player
 playerImg = pygame.image.load('player.png')
 playerX = 370
@@ -18,11 +34,21 @@ playerX_change = 0
 playerY_change = 0
 
 # Enemy
-gunImg = pygame.image.load('gun.png')
-gunX = random.randint(0, 736)
-gunY = 50
-gunX_change = 0.4
-gunY_change = 0.4
+
+gunImg = []
+gunX = []
+gunY = []
+gunX_change = []
+gunY_change = []
+
+num_of_enemies = 6
+
+for i in range(num_of_enemies):
+    gunImg.append(pygame.image.load('gun.png'))
+    gunX.append(random.randint(0, 736))
+    gunY.append(0)
+    gunX_change.append(0.4)
+    gunY_change.append(0.4)
 
 # Bullet
 bulletImg = pygame.image.load('bullets.png')
@@ -41,14 +67,21 @@ def Player(x, y):
     screen.blit(playerImg, (x, y))
 
 
-def Gun(x, y):
-    screen.blit(gunImg, (x, y))
+def Gun(x, y, i):
+    screen.blit(gunImg[i], (x, y))
 
 
 def fire_bullet(x, y):
     global bullet_state
     bullet_state = "fire"
-    screen.blit(bulletImg, (x+16, y+10))
+    screen.blit(bulletImg, (x + 16, y + 10))
+
+
+def isCollision(enX, enY, bulX, bulY):
+    distance = math.sqrt(math.pow(enX - bulX, 2) + math.pow(enY - bulY, 2))
+    if distance < 50:
+        return True
+    return False
 
 
 # Game loop for the main window
@@ -73,7 +106,7 @@ while running:
                 playerY_change = -1
             if event.key == pygame.K_DOWN:
                 playerY_change = 1
-            if event.key == pygame.K_SPACE :
+            if event.key == pygame.K_SPACE:
                 if bullet_state == "ready":
                     bulletX = playerX
                     bulletY = playerY
@@ -86,19 +119,28 @@ while running:
     playerX += playerX_change
     playerY += playerY_change
 
-    gunY_change = 0
+    for i in range(num_of_enemies):
+        gunY_change[i] = 0
+        if gunX[i] >= 736:
+            gunX_change[i] = -0.4
+            gunY_change[i] = 10
+        if gunX[i] <= 0:
+            gunX_change[i] = 0.4
+            gunY_change[i] = 10
+        gunX[i] += gunX_change[i]
+        gunY[i] += gunY_change[i]
 
-    if gunX >= 736:
-        gunX_change = -0.4
-        gunY_change = 10
-    if gunX <= 0:
-        gunX_change = 0.4
-        gunY_change = 10
+        collision = isCollision(bulletX, bulletY, gunX[i], gunY[i])
+        if collision:
+            score_val += 1
+            bullet_state = "ready"
+            gunX[i] = random.randint(0, 736)
+            gunY[i] = 50
+
+        Gun(gunX[i], gunY[i], i)
+
     if playerY >= 536 or playerY <= 150: playerY_change = 0
     if playerX >= 736 or playerX <= 0: playerX_change = 0
-
-    gunX += gunX_change
-    gunY += gunY_change
 
     bulletY += bulletY_change
 
@@ -108,6 +150,5 @@ while running:
         if bulletY < -10: bullet_state = "ready"
 
     Player(playerX, playerY)
-    Gun(gunX, gunY)
-
+    show_score(textX, textY)
     pygame.display.update()
